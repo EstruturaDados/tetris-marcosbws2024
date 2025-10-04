@@ -1,56 +1,154 @@
-#include <stdio.h>
-
-// Desafio Tetris Stack
-// Tema 3 - Integração de Fila e Pilha
-// Este código inicial serve como base para o desenvolvimento do sistema de controle de peças.
-// Use as instruções de cada nível para desenvolver o desafio.
-
-int main() {
-
-    // 🧩 Nível Novato: Fila de Peças Futuras
-    //
-    // - Crie uma struct Peca com os campos: tipo (char) e id (int).
-    // - Implemente uma fila circular com capacidade para 5 peças.
-    // - Crie funções como inicializarFila(), enqueue(), dequeue(), filaCheia(), filaVazia().
-    // - Cada peça deve ser gerada automaticamente com um tipo aleatório e id sequencial.
-    // - Exiba a fila após cada ação com uma função mostrarFila().
-    // - Use um menu com opções como:
-    //      1 - Jogar peça (remover da frente)
-    //      0 - Sair
-    // - A cada remoção, insira uma nova peça ao final da fila.
-
-
-
-    // 🧠 Nível Aventureiro: Adição da Pilha de Reserva
-    //
-    // - Implemente uma pilha linear com capacidade para 3 peças.
-    // - Crie funções como inicializarPilha(), push(), pop(), pilhaCheia(), pilhaVazia().
-    // - Permita enviar uma peça da fila para a pilha (reserva).
-    // - Crie um menu com opção:
-    //      2 - Enviar peça da fila para a reserva (pilha)
-    //      3 - Usar peça da reserva (remover do topo da pilha)
-    // - Exiba a pilha junto com a fila após cada ação com mostrarPilha().
-    // - Mantenha a fila sempre com 5 peças (repondo com gerarPeca()).
-
-
-    // 🔄 Nível Mestre: Integração Estratégica entre Fila e Pilha
-    //
-    // - Implemente interações avançadas entre as estruturas:
-    //      4 - Trocar a peça da frente da fila com o topo da pilha
-    //      5 - Trocar os 3 primeiros da fila com as 3 peças da pilha
-    // - Para a opção 4:
-    //      Verifique se a fila não está vazia e a pilha tem ao menos 1 peça.
-    //      Troque os elementos diretamente nos arrays.
-    // - Para a opção 5:
-    //      Verifique se a pilha tem exatamente 3 peças e a fila ao menos 3.
-    //      Use a lógica de índice circular para acessar os primeiros da fila.
-    // - Sempre valide as condições antes da troca e informe mensagens claras ao usuário.
-    // - Use funções auxiliares, se quiser, para modularizar a lógica de troca.
-    // - O menu deve ficar assim:
-    //      4 - Trocar peça da frente com topo da pilha
-    //      5 - Trocar 3 primeiros da fila com os 3 da pilha
-
-
-    return 0;
+#include <stdio.h>  // Inclui a biblioteca padrão de entrada e saída (printf, scanf).
+#include <stdlib.h> // Inclui a biblioteca padrão (malloc, free, etc.).
+#include <time.h>   // Inclui a biblioteca para geração de números aleatórios (srand, time).
+#define MAX 5       // Capacidade máxima da fila (tamanho fixo).
+// -------------------- Structs --------------------
+// Define a estrutura de uma peça do Tetris
+typedef struct
+{
+    char nome; // Tipo da peça: 'I', 'O', 'T', 'L', etc.
+    int id;    // Identificador único da peça.
+} Peca;
+// Define a estrutura da fila circular de peças
+typedef struct
+{
+    Peca itens[MAX]; // Array que armazena as peças (capacidade MAX).
+    int inicio;      // Índice da frente da fila (onde a próxima remoção ocorre).
+    int fim;         // Índice do final da fila (onde a próxima inserção ocorre).
+    int total;       // Quantidade de elementos atualmente na fila.
+} Fila;
+// -------------------- Funções da fila --------------------
+// Inicializa a fila, zerando índices e contagem.
+void inicializarFila(Fila *f)
+{
+    f->inicio = 0; // O início aponta para o índice 0.
+    f->fim = 0;    // O fim aponta para o índice 0.
+    f->total = 0;  // A fila começa vazia.
 }
-
+// Verifica se a fila está cheia.
+int filaCheia(Fila *f)
+{
+    return f->total == MAX; // Retorna verdadeiro se o total for igual à capacidade máxima.
+}
+// Verifica se a fila está vazia.
+int filaVazia(Fila *f)
+{
+    return f->total == 0; // Retorna verdadeiro se o total for zero.
+}
+// Insere peça no final da fila (enqueue).
+// Retorna 1 se inseriu, 0 se não foi possível (fila cheia).
+int inserir(Fila *f, Peca p)
+{
+    if (filaCheia(f))
+    {
+        printf("A fila está cheia! Não é possível inserir nova peça.\n");
+        return 0; // Inserção falhou.
+    }
+    f->itens[f->fim] = p; // Armazena a peça no índice do fim.
+    // Atualiza o índice do fim de forma circular:
+    // (fim + 1) % MAX garante que o índice volte para 0 após atingir MAX-1.
+    f->fim = (f->fim + 1) % MAX;
+    f->total++; // Incrementa a quantidade de elementos.
+    return 1;   // Inserção bem-sucedida.
+}
+// Remove peça da frente da fila (dequeue).
+// Retorna a peça removida.
+Peca remover(Fila *f)
+{
+    Peca vazia = {'-', -1}; // Peça "vazia" de retorno em caso de erro.
+    if (filaVazia(f))
+    {
+        printf("A fila está vazia! Nenhuma peça para jogar.\n");
+        return vazia;
+    }
+    Peca p = f->itens[f->inicio]; // Armazena a peça que está na frente (início).
+    // Atualiza o índice de início de forma circular.
+    f->inicio = (f->inicio + 1) % MAX;
+    f->total--; // Decrementa a quantidade de elementos.
+    return p;   // Retorna a peça removida.
+}
+// Exibe todas as peças atualmente na fila, começando pelo início.
+void mostrarFila(Fila *f)
+{
+    if (filaVazia(f))
+    {
+        printf("Fila vazia.\n");
+        return;
+    }
+    printf("Fila de peças: ");
+    // Loop: percorre 'total' elementos a partir de 'inicio', usando aritmética modular.
+    for (int i = 0, idx = f->inicio; i < f->total; i++, idx = (idx + 1) % MAX)
+    {
+        printf("[%c %d] ", f->itens[idx].nome, f->itens[idx].id); // Imprime o tipo e o ID.
+    }
+    printf("\n");
+}
+// -------------------- Função de geração de peças --------------------
+// Gera uma peça aleatória do Tetris, evitando repetição consecutiva (melhoria de UX).
+Peca gerarPeca(int id)
+{
+    char tipos[] = {'I', 'O', 'T', 'L'}; // Tipos possíveis de peças.
+    static char ultimo = '\0';           // Variável estática para guardar o último tipo sorteado (mantém o valor entre chamadas).
+    int sorteio;
+    char novoTipo;
+    // Garante que a peça não seja igual à última (previne repetição).
+    do
+    {
+        sorteio = rand() % 4;      // Sorteia índice de 0 a 3.
+        novoTipo = tipos[sorteio]; // Seleciona o tipo correspondente.
+    } while (novoTipo == ultimo); // Repete se o novo tipo for igual ao anterior.
+    ultimo = novoTipo; // Atualiza o último tipo sorteado para a próxima chamada.
+    Peca p;
+    p.nome = novoTipo; // Define o tipo da peça.
+    p.id = id;         // Define o identificador único.
+    return p;
+}
+// -------------------- Função principal --------------------
+int main()
+{
+    Fila fila;
+    inicializarFila(&fila); // Inicializa a fila.
+    srand(time(NULL));      // Inicializa a semente do gerador de números aleatórios com o tempo atual.
+    int contador = 0;       // Contador para gerar IDs únicos para cada peça.
+    // Preenche a fila inicial com 5 peças.
+    for (int i = 0; i < MAX; i++)
+    {
+        inserir(&fila, gerarPeca(contador++)); // Insere peças e incrementa o contador de ID.
+    }
+    int opcao;
+    do
+    {
+        printf("\n");
+        mostrarFila(&fila); // Mostra o estado atual da fila.
+        // Menu de opções para o usuário
+        printf("\nOpções:\n");
+        printf("1 - Jogar peça (dequeue)\n");        // Opção para remover da frente.
+        printf("2 - Inserir nova peça (enqueue)\n"); // Opção para inserir no final.
+        printf("0 - Sair\n");
+        printf("Escolha: ");
+        scanf("%d", &opcao);
+        if (opcao == 1)
+        {
+            // Remove peça da frente da fila
+            Peca jogada = remover(&fila);
+            if (jogada.id != -1)
+            { // Verifica se a remoção foi bem-sucedida.
+                printf("Peça jogada: [%c %d]\n", jogada.nome, jogada.id);
+            }
+        }
+        else if (opcao == 2)
+        {
+            // Tenta inserir nova peça no final da fila
+            if (inserir(&fila, gerarPeca(contador++)))
+            { // Gera uma nova peça com novo ID.
+                printf("Nova peça adicionada à fila!\n");
+            }
+        }
+        else if (opcao != 0)
+        {
+            printf("Opção inválida! Digite 0, 1 ou 2.\n");
+        }
+    } while (opcao != 0); // Continua até o usuário escolher sair (0).
+    printf("Encerrando o jogo Tetris Stack!\n");
+    return 0; // Fim do programa.
+}
